@@ -8,9 +8,9 @@ import android.util.Log;
 
 public class StepCount implements StepCountListener {
     private int mCount; //当前步数
-    private int count;  //缓存步数，步数3秒内小于10步则不计数
-    private long timeOfLastPeak = 0;//计时  开始时间 步数3秒内小于10步则不计数
-    private long timeOfThisPeak = 0;//计时  现在时间 步数3秒内小于10步则不计数
+    private int count;  //缓存步数
+    private long timeOfLastPeak = 0;//计时  开始时间
+    private long timeOfThisPeak = 0;//计时  现在时间
     private StepValuePassListener stepValuePassListener;//接口用来传递步数变化
     private StepDetector stepDetector;//传感器SensorEventListener子类实例
 
@@ -39,8 +39,8 @@ public class StepCount implements StepCountListener {
             this.count = 1;
         }
     }
-    public void setSteps(int initNowBusu) {
-        this.mCount = initNowBusu;//接收上层调用传递过来的当前步数
+    public void setSteps(int initNowStepCount) {
+        this.mCount = initNowStepCount;//接收上层调用传递过来的当前步数
         this.count = 0;
         timeOfLastPeak = 0;
         timeOfThisPeak = 0;

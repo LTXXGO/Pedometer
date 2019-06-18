@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -31,7 +32,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Button gravitySensorStartButton;
     private Button accelerometerStartButton;
     private Button stopRecordButton;
-    private boolean recording;
+    private boolean recording = false;
     private static int stepSensorType = -1;
     private int nowStepCount;
     private Intent intent;
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Calendar calendar;
     private TextView mTextTime;
     private Button mBtnZero;
-    // 计算时间
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +64,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stopRecordButton = findViewById(R.id.bt_stop);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         nowStepCount = Integer.parseInt(textView.getText().toString());
+        // 未开始计步时禁用'停止计步'按钮
+        stopRecordButton.setEnabled(false);
+        // 设置按钮字体颜色
+        stopRecordButton.setTextColor(Color.rgb(128, 128, 128));
+        gravitySensorStartButton.setTextColor(Color.rgb(0, 133, 119));
+        accelerometerStartButton.setTextColor(Color.rgb(0, 133, 119));
         mBtnZero = findViewById(R.id.bt_zero);
         mBtnZero.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,7 +82,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelerometerStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // 更新'记录'状态
                 recording = true;
+                // 更新按钮显示
+                accelerometerStartButton.setText("使用加速度传感器\n计步中");
+                // 启用'停止计步'按钮
+                stopRecordButton.setEnabled(true);
+                stopRecordButton.setTextColor(Color.rgb(255, 0, 0));
+                // 禁用'开始计步'按钮
+                gravitySensorStartButton.setEnabled(false);
+                gravitySensorStartButton.setTextColor(Color.rgb(128, 128, 128));
+                accelerometerStartButton.setEnabled(false);
+                accelerometerStartButton.setTextColor(Color.rgb(0, 133, 119));
+
                 calendar = Calendar.getInstance();
                 calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
                 startDay = String.valueOf(calendar.get(Calendar.DATE));
@@ -100,7 +119,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gravitySensorStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // 更新'记录'状态
                 recording = true;
+                // 更新按钮显示
+                gravitySensorStartButton.setText("使用重力传感器\n计步中");
+                // 启用'停止计步'按钮
+                stopRecordButton.setEnabled(true);
+                stopRecordButton.setTextColor(Color.rgb(255, 0, 0));
+                // 禁用'开始计步'按钮
+                gravitySensorStartButton.setEnabled(false);
+                gravitySensorStartButton.setTextColor(Color.rgb(0, 133, 119));
+                accelerometerStartButton.setEnabled(false);
+                accelerometerStartButton.setTextColor(Color.rgb(128, 128, 128));
+
                 calendar = Calendar.getInstance();
                 calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
                 startDay = String.valueOf(calendar.get(Calendar.DATE));
@@ -129,7 +160,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stopRecordButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // 更新'记录'状态
                 recording = false;
+                // 禁用'停止计步'按钮
+                stopRecordButton.setEnabled(false);
+                stopRecordButton.setTextColor(Color.rgb(255, 0, 0));
+                // 启用开始计步按钮
+                gravitySensorStartButton.setEnabled(true);
+                gravitySensorStartButton.setText("使用重力传感器\n开始计步");
+                gravitySensorStartButton.setTextColor(Color.rgb(0, 133, 119));
+                accelerometerStartButton.setEnabled(true);
+                accelerometerStartButton.setText("使用加速度传感器\n开始计步");
+                accelerometerStartButton.setTextColor(Color.rgb(0, 133, 119));
+
                 calendar = Calendar.getInstance();
                 calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
                 finishDay = String.valueOf(calendar.get(Calendar.DATE));
@@ -247,14 +290,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     previousStepCount = thisStepCount;
                 }
             }
-            //这种类型的传感器触发一个事件每次采取的步骤是用户。只允许返回值是1.0,为每个步骤生成一个事件。
+            // 这种类型的传感器触发一个事件每次采取的步骤是用户。只允许返回值是1.0,为每个步骤生成一个事件。
             // 像任何其他事件,时间戳表明当事件发生(这一步),这对应于脚撞到地面时,生成一个高加速度的变化。
             else if (stepSensorType == Sensor.TYPE_STEP_DETECTOR) {
                 if (event.values[0] == 1.0) {
                     nowStepCount++;
                 }
             }
-            Log.d("888", "nowbusu: " + nowStepCount);
+            Log.d("888", "nowStepCount: " + nowStepCount);
             Log.d("888", "onSensorChanged: " + recording);
             textView.setText(Integer.toString(nowStepCount));
         }
