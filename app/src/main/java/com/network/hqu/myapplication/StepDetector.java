@@ -50,8 +50,7 @@ public class StepDetector implements SensorEventListener {
         for (int i = 0; i < 3; i++) {
             oriValues[i] = event.values[i];
         }
-        gravityNew = (float) Math.sqrt(oriValues[0] * oriValues[0]
-                + oriValues[1] * oriValues[1] + oriValues[2] * oriValues[2]);
+        gravityNew = (float) Math.sqrt(oriValues[0] * oriValues[0] + oriValues[1] * oriValues[1] + oriValues[2] * oriValues[2]);
         detectorNewStep(gravityNew);
     }
 
@@ -77,8 +76,7 @@ public class StepDetector implements SensorEventListener {
             if (detectorPeak(values, gravityOld)) {
                 timeOfLastPeak = timeOfThisPeak;
                 timeOfNow = System.currentTimeMillis();
-                if (timeOfNow - timeOfLastPeak >= TimeInterval
-                        && (peakOfWave - valleyOfWave >= ThreadValue)) {
+                if (timeOfNow - timeOfLastPeak >= TimeInterval && (peakOfWave - valleyOfWave >= ThreadValue)) {
                     timeOfThisPeak = timeOfNow;
                     /*
                      * 更新界面的处理，不涉及到算法
@@ -89,8 +87,7 @@ public class StepDetector implements SensorEventListener {
                      * */
                     mStepListeners.countStep();
                 }
-                if (timeOfNow - timeOfLastPeak >= TimeInterval
-                        && (peakOfWave - valleyOfWave >= InitialValue)) {
+                if (timeOfNow - timeOfLastPeak >= TimeInterval && (peakOfWave - valleyOfWave >= InitialValue)) {
                     timeOfThisPeak = timeOfNow;
                     ThreadValue = peakValleyThread(peakOfWave - valleyOfWave);
                 }
@@ -120,7 +117,6 @@ public class StepDetector implements SensorEventListener {
             continueUpCount = 0;
             isDirectionUp = false;
         }
-
         if (!isDirectionUp && lastStatus
                 && (continueUpFormerCount >= 2 || oldValue >= 20)) {
             peakOfWave = oldValue;
@@ -152,7 +148,6 @@ public class StepDetector implements SensorEventListener {
             tempValue[ValueNum - 1] = value;
         }
         return tempThread;
-
     }
 
     /*
@@ -174,11 +169,9 @@ public class StepDetector implements SensorEventListener {
             ave = (float) 2.3;
         else if (ave >= 3 && ave < 4)
             ave = (float) 2.0;
-        else {
+        else
             ave = (float) 1.3;
-        }
         return ave;
     }
-
 }
 

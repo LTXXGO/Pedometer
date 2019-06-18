@@ -24,7 +24,6 @@ public class StepCount implements StepCountListener {
         this.timeOfLastPeak = this.timeOfThisPeak;
         this.timeOfThisPeak = System.currentTimeMillis();
         Log.i("countStep","传感器数据刷新回调");
-//        notifyListener();
         if (this.timeOfThisPeak - this.timeOfLastPeak <= 3000L) {
             if (this.count < 9) {
                 this.count++;
@@ -37,11 +36,10 @@ public class StepCount implements StepCountListener {
                 notifyListener();
             }
         } else {//超时
-            this.count = 1;//为1,不是0
+            this.count = 1;
         }
-
     }
-    public void setSteps(int initNowBusu){
+    public void setSteps(int initNowBusu) {
         this.mCount = initNowBusu;//接收上层调用传递过来的当前步数
         this.count = 0;
         timeOfLastPeak = 0;
@@ -59,13 +57,13 @@ public class StepCount implements StepCountListener {
     /**
      * 更新步数，通过接口函数通过上层调用者
      */
-    public void notifyListener(){
-        if(this.stepValuePassListener != null){
+    public void notifyListener() {
+        if (this.stepValuePassListener != null) {
             Log.i("countStep","数据更新");
             this.stepValuePassListener.stepChanged(this.mCount);  //当前步数通过接口传递给调用者
         }
     }
-    public  void initListener(StepValuePassListener listener){
+    public  void initListener(StepValuePassListener listener) {
         this.stepValuePassListener = listener;
     }
 }

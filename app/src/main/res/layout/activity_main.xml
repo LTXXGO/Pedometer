@@ -20,7 +20,7 @@
         android:layout_marginRight="100dp"/>
     </LinearLayout>
     <TextView
-        android:id="@+id/busu"
+        android:id="@+id/counts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textView"
@@ -66,7 +66,7 @@
             android:id="@+id/bt_startservice"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:text="开始计步"/>
+            android:text="使用重力传感器开始计步"/>
         <Button
             android:id="@+id/bt_stopservice"
             android:layout_width="150dp"
@@ -82,12 +82,12 @@
             android:id="@+id/bt_startbya"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:text="加速度传感器计步"/>
+            android:text="使用加速度传感器开始计步"/>
         <Button
             android:id="@+id/bt_stopa"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:text="停止加速度计步"/>
+            android:text="停止计步"/>
     </LinearLayout>
     <Button
         android:id="@+id/bt_zero"
