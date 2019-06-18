@@ -30,8 +30,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean isBind;
     private Button gravitySensorStartButton;
     private Button accelerometerStartButton;
-    private Button stopGravitySensorServiceButton;
-    private Button stopAccelerometerServiceButton;
+    private Button stopRecordButton;
     private boolean recording;
     private static int stepSensorType = -1;
     private int nowStepCount;
@@ -61,8 +60,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         textView = (TextView) findViewById(R.id.counts);
         gravitySensorStartButton = findViewById(R.id.bt_startservice);
         accelerometerStartButton = findViewById(R.id.bt_startbya);
-        stopGravitySensorServiceButton = findViewById(R.id.bt_stopservice);
-        stopAccelerometerServiceButton = findViewById(R.id.bt_stopa);
+        stopRecordButton = findViewById(R.id.bt_stop);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         nowStepCount = Integer.parseInt(textView.getText().toString());
         mBtnZero = findViewById(R.id.bt_zero);
@@ -99,62 +97,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        stopAccelerometerServiceButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                recording = false;
-                calendar = Calendar.getInstance();
-                calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
-                finishDay = String.valueOf(calendar.get(Calendar.DATE));
-                if (calendar.get(Calendar.AM_PM) == 0) {
-                    finishHour = String.valueOf(calendar.get(Calendar.HOUR));
-                }
-                else {
-                    finishHour = String.valueOf(calendar.get(Calendar.HOUR) + 12);
-                }
-                finishMin = String.valueOf(calendar.get(Calendar.MINUTE));
-                finishSec = String.valueOf(calendar.get(Calendar.SECOND));
-                //设置用时
-                mTextTime = findViewById(R.id.tx_time);
-                int fd = Integer.valueOf(finishDay);
-                int sd = Integer.valueOf(startDay);
-                int fh = Integer.valueOf(finishHour);
-                int sh = Integer.valueOf(startHour);
-                int fm = Integer.valueOf(finishMin);
-                int sm = Integer.valueOf(startMin);
-                int fs = Integer.valueOf(finishSec);
-                int ss = Integer.valueOf(startSec);
-                String timeDay = Integer.toString((fd - sd));
-                String timeHour;
-                String timeMin;
-                String timeSec;
-                if (fh >= sh) {
-                    timeHour = Integer.toString((fh - sh));
-                } else {
-                    timeHour = Integer.toString((fh + 24 - sh));
-                    timeDay = Integer.toString((fd - sd - 1));
-                }
-                if (fm >= sm) {
-                    timeMin = Integer.toString((fm - sm));
-                } else {
-                    timeMin = Integer.toString((fm + 60 - sm));
-                    timeHour = Integer.toString((Integer.valueOf(timeHour) - 1));
-                }
-                if (fs >= ss) {
-                    timeSec = Integer.toString((fs - ss));
-                    Log.d("888", "fs: "+fs);
-                    Log.d("888", "ss: "+ss);
-                    Log.d("888", "timesec: "+timeSec);
-                } else {
-                    timeSec = Integer.toString((fs + 60 - ss));
-                    timeMin = Integer.toString((Integer.valueOf(timeMin) - 1));
-                }
-                Log.d("888", "finishTime :" + finishDay + "-" + finishHour + ":" + finishMin + ":" + finishSec);
-                Log.d("888", "time :" + timeDay + "-" + timeHour + ":" + timeMin + ":" + timeSec);
-                mTextTime.setText(timeDay + "天" + timeHour + "小时" + timeMin + "分钟" + timeSec + "秒");
-            }
-        });
-
         gravitySensorStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -184,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        stopGravitySensorServiceButton.setOnClickListener(new View.OnClickListener() {
+        stopRecordButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 recording = false;
