@@ -27,18 +27,16 @@ import java.util.TimeZone;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private TextView textView;
-    private SensorEventListener sensorEventListener;
-    private boolean isBind;
     private Button gravitySensorStartButton;
     private Button accelerometerStartButton;
     private Button stopRecordButton;
     private boolean recording = false;
     private static int stepSensorType = -1;
     private int nowStepCount;
-    private Intent intent;
     private Thread thread;
     private StepCount stepCount;
-    SensorManager sensorManager;
+    private SensorManager pedometerSensorManager;
+    private SensorManager directionSensorManager;
     private boolean recorded = false;
     private int numberOfStepsRecorded = 0;
     private int previousStepCount = 0;
@@ -51,18 +49,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private String startSec;
     private String finishSec;
     private Calendar calendar;
-    private TextView mTextTime;
-    private Button mBtnZero;
+    private TextView timeTextView;
+    private TextView directionTextView;
+    private TextView caloriesTextView;
+    private Button recountButton;
+    private float[] accelerometerValues = new float[3];
+    private float[] magneticFieldSensorValues = new float[3];
+    private float calories;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textView = (TextView) findViewById(R.id.counts);
+        textView = findViewById(R.id.counts);
+        timeTextView = findViewById(R.id.time);
+        timeTextView.setText(0 + "天" + 0 + "小时" + 0 + "分钟" + 0 + "秒");
+        directionTextView = findViewById(R.id.direction);
+        caloriesTextView = findViewById(R.id.calories);
         gravitySensorStartButton = findViewById(R.id.bt_startservice);
         accelerometerStartButton = findViewById(R.id.bt_startbya);
         stopRecordButton = findViewById(R.id.bt_stop);
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        pedometerSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         nowStepCount = Integer.parseInt(textView.getText().toString());
         // 未开始计步时禁用'停止计步'按钮
         stopRecordButton.setEnabled(false);
@@ -70,14 +77,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stopRecordButton.setTextColor(Color.rgb(128, 128, 128));
         gravitySensorStartButton.setTextColor(Color.rgb(0, 133, 119));
         accelerometerStartButton.setTextColor(Color.rgb(0, 133, 119));
-        mBtnZero = findViewById(R.id.bt_zero);
-        mBtnZero.setOnClickListener(new View.OnClickListener() {
+        recountButton = findViewById(R.id.bt_zero);
+        recountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 nowStepCount = 0;
                 textView.setText("0");
+                timeTextView.setText(0 + "天" + 0 + "小时" + 0 + "分钟" + 0 + "秒");
             }
         });
+
+        directionSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        Sensor accelerometerSensor = directionSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        Sensor magneticFieldSensor = directionSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        directionSensorManager.registerListener(listener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        directionSensorManager.registerListener(listener, magneticFieldSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+        calculateOrientation();
+        calculateCalories();
 
         accelerometerStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -94,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 gravitySensorStartButton.setTextColor(Color.rgb(128, 128, 128));
                 accelerometerStartButton.setEnabled(false);
                 accelerometerStartButton.setTextColor(Color.rgb(0, 133, 119));
+                timeTextView.setText("正在计算...");
 
                 calendar = Calendar.getInstance();
                 calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
@@ -131,6 +149,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 gravitySensorStartButton.setTextColor(Color.rgb(0, 133, 119));
                 accelerometerStartButton.setEnabled(false);
                 accelerometerStartButton.setTextColor(Color.rgb(128, 128, 128));
+                timeTextView.setText("正在计算...");
 
                 calendar = Calendar.getInstance();
                 calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
@@ -164,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 recording = false;
                 // 禁用'停止计步'按钮
                 stopRecordButton.setEnabled(false);
-                stopRecordButton.setTextColor(Color.rgb(255, 0, 0));
+                stopRecordButton.setTextColor(Color.rgb(128, 128, 128));
                 // 启用开始计步按钮
                 gravitySensorStartButton.setEnabled(true);
                 gravitySensorStartButton.setText("使用重力传感器\n开始计步");
@@ -183,8 +202,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
                 finishMin = String.valueOf(calendar.get(Calendar.MINUTE));
                 finishSec = String.valueOf(calendar.get(Calendar.SECOND));
-                //设置用时
-                mTextTime = findViewById(R.id.tx_time);
+
                 int fd = Integer.valueOf(finishDay);
                 int sd = Integer.valueOf(startDay);
                 int fh = Integer.valueOf(finishHour);
@@ -220,9 +238,59 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
                 Log.d("888", "finishTime :" + finishDay + "-" + finishHour + ":" + finishMin + ":" + finishSec);
                 Log.d("888", "time :"+timeDay + "-" + timeHour + ":" + timeMin + ":" + timeSec);
-                mTextTime.setText(timeDay + "天" + timeHour + "小时" + timeMin + "分钟" + timeSec + "秒");
+                timeTextView.setText(timeDay + "天" + timeHour + "小时" + timeMin + "分钟" + timeSec + "秒");
             }
         });
+    }
+
+    public void onPause(){
+        directionSensorManager.unregisterListener(listener);
+        super.onPause();
+    }
+
+    final SensorEventListener listener = new SensorEventListener() {
+        public void onSensorChanged(SensorEvent sensorEvent) {
+            if (sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+                magneticFieldSensorValues = sensorEvent.values;
+            if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+                accelerometerValues = sensorEvent.values;
+            calculateOrientation();
+        }
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+    };
+
+    private void calculateOrientation() {
+        float[] values = new float[3];
+        float[] R = new float[9];
+        SensorManager.getRotationMatrix(R, null, accelerometerValues, magneticFieldSensorValues);
+        SensorManager.getOrientation(R, values);
+        // 要经过一次数据格式的转换，转换为度
+        values[0] = (float) Math.toDegrees(values[0]);
+        Log.i("000", values[0] + "");
+        if (values[0] >= -5 && values[0] < 5) {
+            directionTextView.setText("正北");
+        } else if (values[0] >= 5 && values[0] < 85) {
+            directionTextView.setText("东北");
+        } else if (values[0] >= 85 && values[0] <=95) {
+            directionTextView.setText("正东");
+        } else if (values[0] >= 95 && values[0] <175) {
+            directionTextView.setText("东南");
+        } else if ((values[0] >= 175 && values[0] <= 180) || (values[0]) >= -180 && values[0] < -175) {
+            directionTextView.setText("正南");
+        } else if (values[0] >= -175 && values[0] <-95) {
+            directionTextView.setText("西南");
+        } else if (values[0] >= -95 && values[0] < -85) {
+            directionTextView.setText("正西");
+        } else if (values[0] >= -85 && values[0] <-5) {
+            directionTextView.setText("西北");
+        } else {
+            directionTextView.setText("暂无数据");
+        }
+    }
+
+    private void calculateCalories() {
+        calories = nowStepCount / 20;
+        caloriesTextView.setText(calories + " cal");
     }
 
     @Override
@@ -231,15 +299,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void addCountStepListener() {
-        Sensor countSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-        Sensor detectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        Sensor countSensor = pedometerSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        Sensor detectorSensor = pedometerSensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         if (countSensor != null) {
             stepSensorType = Sensor.TYPE_STEP_COUNTER;
-            sensorManager.registerListener((SensorEventListener) this, countSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            pedometerSensorManager.registerListener((SensorEventListener) this, countSensor, SensorManager.SENSOR_DELAY_NORMAL);
             Log.i("计步传感器类型", "Sensor.TYPE_STEP_COUNTER");
         } else if (detectorSensor != null) {
             stepSensorType = Sensor.TYPE_STEP_DETECTOR;
-            sensorManager.registerListener((SensorEventListener) this, detectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            pedometerSensorManager.registerListener((SensorEventListener) this, detectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
             addBasePedometerListener();
         }
@@ -250,9 +318,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stepCount = new StepCount();
         stepCount.setSteps(nowStepCount);
         //获取传感器类型 获得加速度传感器
-        Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        Sensor sensor = pedometerSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         //此方法用来注册，只有注册过才会生效，参数：SensorEventListener的实例，Sensor的实例，更新速率
-        boolean isAvailable = sensorManager.registerListener(stepCount.getStepDetector(), sensor, SensorManager.SENSOR_DELAY_UI);
+        boolean isAvailable = pedometerSensorManager.registerListener(stepCount.getStepDetector(), sensor, SensorManager.SENSOR_DELAY_UI);
         stepCount.initListener(new StepValuePassListener() {
             @Override
             public void stepChanged(int steps) {
@@ -280,11 +348,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     recorded = true;
                     numberOfStepsRecorded = tempStep;
                 } else {
-                    //获取APP打开到现在的总步数=本次系统回调的总步数-APP打开之前已有的步数
+                    //获取APP打开到现在的总步数 = 本次系统回调的总步数-APP打开之前已有的步数
                     int thisStepCount = tempStep - numberOfStepsRecorded;
-                    //本次有效步数=（APP打开后所记录的总步数-上一次APP打开后所记录的总步数）
+                    //本次有效步数 =（APP打开后所记录的总步数-上一次APP打开后所记录的总步数）
                     int thisStep = thisStepCount - previousStepCount;
-                    //总步数=现有的步数+本次有效步数
+                    //总步数 = 现有的步数 + 本次有效步数
                     nowStepCount += (thisStep);
                     //记录最后一次APP打开到现在的总步数
                     previousStepCount = thisStepCount;

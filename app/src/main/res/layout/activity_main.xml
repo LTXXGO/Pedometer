@@ -49,13 +49,67 @@
             android:layout_height="match_parent"
             android:gravity="end">
         <TextView
-            android:id="@+id/tx_time"
+            android:id="@+id/time"
             android:layout_marginRight="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:textColor="#bdbdbd"
             />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_marginTop="20dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="行走方向"
+            android:textColor="@android:color/background_dark"
+            android:textSize="18sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="end">
+            <TextView
+                android:id="@+id/direction"
+                android:text="暂无数据"
+                android:layout_marginRight="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="#bdbdbd"
+                />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_marginTop="20dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="消耗卡路里"
+            android:textColor="@android:color/background_dark"
+            android:textSize="18sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="end">
+            <TextView
+                android:id="@+id/calories"
+                android:text="暂无数据"
+                android:layout_marginRight="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="#bdbdbd"
+                />
         </LinearLayout>
     </LinearLayout>
     <LinearLayout
@@ -94,7 +148,7 @@
         android:id="@+id/bt_zero"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:text="清空步数"
+        android:text="重新计数"
         android:textSize="18sp"
         android:textStyle="bold" />
 
