@@ -8,7 +8,6 @@ import android.hardware.SensorEventListener;
  * */
 
 public class StepDetector implements SensorEventListener {
-
     //存放三轴数据
     float[] oriValues = new float[3];
     final int ValueNum = 4;

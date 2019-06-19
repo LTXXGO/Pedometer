@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private String startSec;
     private String finishSec;
     private Calendar calendar;
+    private TextView startTimeTextView;
+    private TextView finishTimeTextView;
     private TextView timeTextView;
     private TextView directionTextView;
     private TextView caloriesTextView;
@@ -66,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         timeTextView.setText(0 + "天" + 0 + "小时" + 0 + "分钟" + 0 + "秒");
         directionTextView = findViewById(R.id.direction);
         caloriesTextView = findViewById(R.id.calories);
+        startTimeTextView = findViewById(R.id.start_time);
+        finishTimeTextView = findViewById(R.id.finish_time);
         gravitySensorStartButton = findViewById(R.id.bt_startservice);
         accelerometerStartButton = findViewById(R.id.bt_startbya);
         stopRecordButton = findViewById(R.id.bt_stop);
@@ -83,7 +87,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onClick(View v) {
                 nowStepCount = 0;
                 textView.setText("0");
-                timeTextView.setText(0 + "天" + 0 + "小时" + 0 + "分钟" + 0 + "秒");
+                timeTextView.setText("暂无数据");
+                startTimeTextView.setText("暂无数据");
+                finishTimeTextView.setText("暂无数据");
             }
         });
 
@@ -99,31 +105,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelerometerStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 更新'记录'状态
-                recording = true;
+                updateUI();
                 // 更新按钮显示
                 accelerometerStartButton.setText("使用加速度传感器\n计步中");
-                // 启用'停止计步'按钮
-                stopRecordButton.setEnabled(true);
-                stopRecordButton.setTextColor(Color.rgb(255, 0, 0));
-                // 禁用'开始计步'按钮
-                gravitySensorStartButton.setEnabled(false);
-                gravitySensorStartButton.setTextColor(Color.rgb(128, 128, 128));
-                accelerometerStartButton.setEnabled(false);
-                accelerometerStartButton.setTextColor(Color.rgb(0, 133, 119));
-                timeTextView.setText("正在计算...");
-
-                calendar = Calendar.getInstance();
-                calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
-                startDay = String.valueOf(calendar.get(Calendar.DATE));
-                if (calendar.get(Calendar.AM_PM) == 0) {
-                    startHour = String.valueOf(calendar.get(Calendar.HOUR));
-                } else {
-                    startHour = String.valueOf(calendar.get(Calendar.HOUR) + 12);
-                }
-                startMin = String.valueOf(calendar.get(Calendar.MINUTE));
-                startSec = String.valueOf(calendar.get(Calendar.SECOND));
-                Log.d("888", "startTime :" + startDay + "-" + startHour + ":" + startMin + ":" + startSec);
+                // 获取当前时间
+                getCurrentTime();
+                startTimeTextView.setText(startDay + "日" + startHour + "时" + startMin + "分" + startSec + "秒");
                 thread = new Thread() {
                     @Override
                     public void run() {
@@ -137,32 +124,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gravitySensorStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 更新'记录'状态
-                recording = true;
+                updateUI();
                 // 更新按钮显示
                 gravitySensorStartButton.setText("使用重力传感器\n计步中");
-                // 启用'停止计步'按钮
-                stopRecordButton.setEnabled(true);
-                stopRecordButton.setTextColor(Color.rgb(255, 0, 0));
-                // 禁用'开始计步'按钮
-                gravitySensorStartButton.setEnabled(false);
-                gravitySensorStartButton.setTextColor(Color.rgb(0, 133, 119));
-                accelerometerStartButton.setEnabled(false);
-                accelerometerStartButton.setTextColor(Color.rgb(128, 128, 128));
-                timeTextView.setText("正在计算...");
-
-                calendar = Calendar.getInstance();
-                calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
-                startDay = String.valueOf(calendar.get(Calendar.DATE));
-                if (calendar.get(Calendar.AM_PM) == 0) {
-                    startHour = String.valueOf(calendar.get(Calendar.HOUR));
-                } else {
-                    startHour = String.valueOf(calendar.get(Calendar.HOUR) + 12);
-                }
-                startMin = String.valueOf(calendar.get(Calendar.MINUTE));
-                startSec = String.valueOf(calendar.get(Calendar.SECOND));
-                Log.d("888", "startTime :" + startDay + "-" + startHour + ":" + startMin + ":" + startSec);
-                final int versionCodes = Build.VERSION.SDK_INT;//取得SDK版本
+                // 获取当前时间
+                getCurrentTime();
+                startTimeTextView.setText(startDay + "日" + startHour + "时" + startMin + "分" + startSec + "秒");
+                //取得SDK版本
+                final int versionCodes = Build.VERSION.SDK_INT;
                 final Thread t = new Thread() {
                     @Override
                     public void run() {
@@ -191,6 +160,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 accelerometerStartButton.setEnabled(true);
                 accelerometerStartButton.setText("使用加速度传感器\n开始计步");
                 accelerometerStartButton.setTextColor(Color.rgb(0, 133, 119));
+                // 启用'重新计数'按钮
+                recountButton.setEnabled(true);
+                recountButton.setTextColor(Color.rgb(0, 0, 0));
 
                 calendar = Calendar.getInstance();
                 calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
@@ -202,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
                 finishMin = String.valueOf(calendar.get(Calendar.MINUTE));
                 finishSec = String.valueOf(calendar.get(Calendar.SECOND));
-
+                finishTimeTextView.setText(finishDay + "日" + finishHour + "时" + finishMin + "分" + finishSec + "秒");
                 int fd = Integer.valueOf(finishDay);
                 int sd = Integer.valueOf(startDay);
                 int fh = Integer.valueOf(finishHour);
@@ -291,6 +263,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void calculateCalories() {
         calories = nowStepCount / 20;
         caloriesTextView.setText(calories + " cal");
+    }
+
+    private void updateUI() {
+        // 更新'记录'状态
+        recording = true;
+        // 启用'停止计步'按钮
+        stopRecordButton.setEnabled(true);
+        stopRecordButton.setTextColor(Color.rgb(255, 0, 0));
+        // 禁用'开始计步'按钮
+        gravitySensorStartButton.setEnabled(false);
+        gravitySensorStartButton.setTextColor(Color.rgb(0, 133, 119));
+        accelerometerStartButton.setEnabled(false);
+        accelerometerStartButton.setTextColor(Color.rgb(128, 128, 128));
+        // 禁用'重新计数'按钮
+        recountButton.setEnabled(false);
+        recountButton.setTextColor(Color.rgb(128, 128, 128));
+        // 更新耗时文本
+        timeTextView.setText("正在计算...");
+    }
+
+    private void getCurrentTime() {
+        calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
+        startDay = String.valueOf(calendar.get(Calendar.DATE));
+        if (calendar.get(Calendar.AM_PM) == 0) {
+            startHour = String.valueOf(calendar.get(Calendar.HOUR));
+        } else {
+            startHour = String.valueOf(calendar.get(Calendar.HOUR) + 12);
+        }
+        startMin = String.valueOf(calendar.get(Calendar.MINUTE));
+        startSec = String.valueOf(calendar.get(Calendar.SECOND));
+        Log.d("888", "startTime :" + startDay + "-" + startHour + ":" + startMin + ":" + startSec);
     }
 
     @Override
