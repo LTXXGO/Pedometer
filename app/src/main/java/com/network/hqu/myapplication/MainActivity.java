@@ -100,7 +100,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         directionSensorManager.registerListener(listener, magneticFieldSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         calculateOrientation();
-        calculateCalories();
 
         accelerometerStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -211,6 +210,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 Log.d("888", "finishTime :" + finishDay + "-" + finishHour + ":" + finishMin + ":" + finishSec);
                 Log.d("888", "time :"+timeDay + "-" + timeHour + ":" + timeMin + ":" + timeSec);
                 timeTextView.setText(timeDay + "天" + timeHour + "小时" + timeMin + "分钟" + timeSec + "秒");
+                calculateCalories();
             }
         });
     }
@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void calculateCalories() {
-        calories = nowStepCount / 20;
+        calories = (float)nowStepCount / (float)20;
         caloriesTextView.setText(calories + " cal");
     }
 
@@ -281,6 +281,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         recountButton.setTextColor(Color.rgb(128, 128, 128));
         // 更新耗时文本
         timeTextView.setText("正在计算...");
+        // 更新结束时间
+        finishTimeTextView.setText("暂无数据");
+        // 更新卡路里
+        caloriesTextView.setText("正在计算...");
     }
 
     private void getCurrentTime() {
